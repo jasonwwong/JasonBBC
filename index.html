@@ -29,10 +29,13 @@
       <section id="output">
       </section>
     </article>
+    <script src="scripts/jquery-1.11.0.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="scripts/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="scripts/jasonbbc.js" type="text/javascript" charset="utf-8"></script>
     <script>
-        var editor = ace.edit("editor");
-        editor.getSession().setMode("ace/mode/c_cpp");
+      $(document).ready(function(){
+        init();
+      });
     </script>
   </body>
 </html>

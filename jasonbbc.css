@@ -41,6 +41,7 @@ header h1{
   float: left;
   padding-top: 5px;
   border: 1px solid gray;
+  cursor: pointer;
 }
 #toolbar div:first-child{
   margin-right: 5px;
