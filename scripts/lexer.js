@@ -55,25 +55,45 @@ var inputIndex;
 var lineNumber;
 var linePosition;
 var matrixPosition;
+var startLinePosition;
+var currentToken;
 
 function lex(){
   inputIndex = 0;
   lineNumber = 1;
   linePosition = 0;
   matrixPosition = 0;
+  startingLinePosition = -1;
+  currentToken = "";
   var currentChar = nextChar();
   while (currentChar != ""){
     // found a valid state to move to
     if (currentChar in tokenMatrix[matrixPosition]){
       matrixPosition = tokenMatrix[matrixPosition][currentChar];
+      currentToken += currentChar;
+      if (startingLinePosition == -1){
+        startingLinePosition = linePosition;
+      }
     }
     // whitespace found at accept state, create token
     else if ((currentChar == " " || currentChar == "\n") && "accept" in tokenMatrix[matrixPosition]){
       var tokenType = tokenMatrix[matrixPosition]["accept"];
-      var token = tokenType; // NYI
+      var token = new Token();
+      token.type = tokenType;
+      token.lineNumber = lineNumber;
+      token.linePosition = startingLinePosition;
+      if (tokenType == "T_id"){
+        token.name = currentToken;
+      }
+      if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
+        token.value = currentToken;
+      }
       TOKENS.push(token);
+      //output("Accepted token: {0}".format(JSON.stringify(token)));
       output("Accepted token: {0}".format(tokenType));
       matrixPosition = 0;
+      startingLinePosition = -1;
+      currentToken = "";
     }
     // non-terminating whitespace
     else if ((currentChar == " " || currentChar == "\n") && matrixPosition == 0){
