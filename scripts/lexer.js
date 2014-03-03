@@ -1,13 +1,13 @@
 var tokenMatrix =
 [ {"a": 1, "b": 3, "c": 1, "d": 1, "e": 1, "f": 4, "g": 1, "h": 1, "i": 5, "j": 1, "k": 1, "l": 1, "m": 1, "n": 1, "o": 1, "p": 25, "q": 1, "r": 1, "s": 6, "t": 7, "u": 1, "v": 1, "w": 8, "x": 1, "y": 1, "z": 1, "1": 2, "2": 2, "3": 2, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "0": 2, "$": 9, "{": 10, "}": 11, "(": 12, ")": 13, "=": 14, "\"": 15, "!": 17, "+": 18}, // 0
-  {"accept": "T_id"}, // 1
+  {"accept": "T_char"}, // 1
   {"accept": "T_digit", "1": 2, "2": 2, "3": 2, "4": 2, "5": 2, "6": 2, "7": 2, "8": 2, "9": 2, "0": 2}, // 2
-  {"accept": "T_id", "o": 19}, // 3
-  {"accept": "T_id", "a": 26}, // 4
-  {"accept": "T_id", "f": 30, "n": 31}, // 5
-  {"accept": "T_id", "t": 34}, // 6
-  {"accept": "T_id", "r": 39}, // 7
-  {"accept": "T_id", "h": 42}, // 8
+  {"accept": "T_char", "o": 19}, // 3
+  {"accept": "T_char", "a": 26}, // 4
+  {"accept": "T_char", "f": 30, "n": 31}, // 5
+  {"accept": "T_char", "t": 34}, // 6
+  {"accept": "T_char", "r": 39}, // 7
+  {"accept": "T_char", "h": 42}, // 8
   {"accept": "T_EOF"}, // 9
   {"accept": "T_LBrace"}, // 10
   {"accept": "T_RBrace"}, // 11
@@ -24,7 +24,7 @@ var tokenMatrix =
   {"a": 23}, // 22
   {"n": 24}, // 23
   {"accept": "T_type"}, // 24
-  {"accept": "T_id", "r": 48}, // 25
+  {"accept": "T_char", "r": 48}, // 25
   {"l": 27}, // 26
   {"s": 28}, // 27
   {"e": 29}, // 28
@@ -82,7 +82,7 @@ function lex(){
       token.type = tokenType;
       token.lineNumber = lineNumber;
       token.linePosition = startingLinePosition;
-      if (tokenType == "T_id"){
+      if (tokenType == "T_char"){
         token.name = currentToken;
       }
       if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
