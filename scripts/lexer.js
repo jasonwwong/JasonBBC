@@ -85,8 +85,12 @@ function lex(){
       if (tokenType == "T_id"){
         token.name = currentToken;
       }
-      if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
+      else if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
         token.value = currentToken;
+      }
+      else if (tokenType == "T_string"){
+        // remove quotes from the token name
+        token.value = currentToken.substr(1, currentToken.length - 2);
       }
       TOKENS.push(token);
       //output("Accepted token: {0}".format(JSON.stringify(token)));
