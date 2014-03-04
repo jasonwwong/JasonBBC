@@ -6,9 +6,10 @@ function init(){
   var editor = ace.edit("editor");
   editor.getSession().setMode("ace/mode/c_cpp");
   $("#compile").on("click", function(){
-    INPUT = editor.getValue();
-    var steps = ["lex"];
+    INPUT = editor.getValue() + " ";
+    var steps = ["lex", "parse"];
     clearOutput();
+    TOKENS = [];
     output("Starting compilation");
     // call each step of the compilation process and terminate if one fails
     for (var i = 0; i < steps.length; i++){
@@ -17,7 +18,7 @@ function init(){
         output("Successfully completed {0}".format(steps[i]));
       }
       else{
-        output("Failed on ".format(steps[i]));
+        output("Failed on {0}".format(steps[i]));
         return;
       }
     }
