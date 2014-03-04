@@ -15,7 +15,7 @@ var tokenMatrix =
   {"accept": "T_RParen"}, // 13
   {"accept": "T_assignment", "=": 46}, // 14
   {"a": 15, "b": 15, "c": 15, "d": 15, "e": 15, "f": 15, "g": 15, "h": 15, "i": 15, "j": 15, "k": 15, "l": 15, "m": 15, "n": 15, "o": 15, "p": 15, "q": 15, "r": 15, "s": 15, "t": 15, "u": 15, "v": 15, "w": 15, "x": 15, "y": 15, "z": 15, " ": 15, "\"": 16}, // 15
-  {"accept": "T_string"}, // 16
+  {"accept": "T_charlist"}, // 16
   {"=": 47}, // 17
   {"accept": "T_plus"}, // 18
   {"o": 20}, // 19
@@ -88,7 +88,7 @@ function lex(){
       else if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
         token.value = currentToken;
       }
-      else if (tokenType == "T_string"){
+      else if (tokenType == "T_charlist"){
         // remove quotes from the token name
         token.value = currentToken.substr(1, currentToken.length - 2);
       }
