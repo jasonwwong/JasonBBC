@@ -78,7 +78,7 @@ function parseStatement(){
     parseVarDecl();
   }
   else if (isWhileStatement()){
-    parseWhileStatment();
+    parseWhileStatement();
   }
   else if (isIfStatement()){
     parseIfStatement();
@@ -166,11 +166,11 @@ function parseIntExpr(){
 }
 
 function isStringExpr(){
-  return currentToken.type == "T_quote";
+  return currentToken.type == "T_charlist";
 }
 
 function parseStringExpr(){
-  checkToken("T_string");
+  checkToken("T_charlist");
 }
 
 function isBooleanExpr(){
@@ -220,6 +220,10 @@ function isBoolval(){
 
 function parseBoolval(){
   checkToken("T_boolval");
+}
+
+function isIntop(){
+  return currentToken.type == "T_plus";
 }
 
 function parseIntop(){
