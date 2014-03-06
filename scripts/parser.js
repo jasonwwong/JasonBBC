@@ -259,10 +259,6 @@ function parseBooleanExpr(){
   else if (isBoolval()){
     parseProduction("Boolval");
   }
-  else{
-    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_LParen | T_boolval]", currentToken.type));
-    panicking = true;
-  }
 }
 
 function isId(){
