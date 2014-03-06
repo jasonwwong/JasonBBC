@@ -12,7 +12,7 @@ function parse(){
   currentToken = getNextToken();
   parseProduction("Program");
   if (!panicking){
-    if (tokenIndex < TOKENS.length + 1){
+    if (tokenIndex < TOKENS.length){
       output("<br />Warning: Input found after EOF ignored");
     }
     output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
@@ -37,10 +37,14 @@ function parseProduction(s){
 }
 
 function getNextToken(){
-  if (tokenIndex <= TOKENS.length){
+  if (tokenIndex < TOKENS.length){
     return TOKENS[tokenIndex++];
   }
-  return null;
+  var nullToken = new Token();
+  nullToken.type = "end of input";
+  nullToken.lineNumber = lineNumber;
+  nullToken.linePosition = linePosition;
+  return nullToken;
 }
 
 function formatNode(s){
@@ -76,7 +80,7 @@ function checkToken(expected){
     }
     
     // special case for EOF not found
-    if (expected == "T_EOF" && currentToken == null){
+    if (expected == "T_EOF" && currentToken.type == "end of input"){
       output("Warning: EOF not found, inserting...");
       var token = new Token();
       token.type = "T_EOF";
@@ -120,7 +124,7 @@ function checkToken(expected){
     }
     
     // consume next token if not eof
-    if (currentToken != "T_EOF"){
+    if (currentToken.type != "T_EOF"){
       currentToken = getNextToken();
     }
   }

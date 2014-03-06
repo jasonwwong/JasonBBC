@@ -44,3 +44,8 @@ Input:
 {a = 44}
 Expected: Failed compilation
 Actual:   Failed compilation, Error at line 1 character 8: expected [T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace], got T_digit
+
+Input:
+{
+Expected: Failed compilation
+Actual:   Failed compilation, Error at line 1 character 3: expected [T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace], got end of input

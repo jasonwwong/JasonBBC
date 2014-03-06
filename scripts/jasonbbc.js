@@ -1,7 +1,7 @@
 var VERBOSE = true;
-var INPUT = "";
-var TOKENS = [];
-var SYMBOLS = [];
+var INPUT;
+var TOKENS;
+var SYMBOLS;
 
 function init(){
   var editor = ace.edit("editor");
@@ -13,6 +13,7 @@ function init(){
     var steps = ["lex", "parse"];
     clearOutput();
     TOKENS = [];
+    SYMBOLS = [];
     output("Starting compilation");
     // call each step of the compilation process and terminate if one fails
     for (var i = 0; i < steps.length; i++){
