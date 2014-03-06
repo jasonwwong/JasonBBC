@@ -17,10 +17,11 @@ function init(){
     for (var i = 0; i < steps.length; i++){
       output("<hr />Starting {0}".format(steps[i]));
       if (window[steps[i]]()){
-        output("Successfully completed {0}!".format(steps[i]));
+        output("{0} successful!".format(capitalize(steps[i])));
       }
       else{
-        output("Failed on {0}".format(steps[i]));
+        output("{0} failed".format(capitalize(steps[i])));
+        output("<hr />Compilation failed");
         return;
       }
     }
@@ -43,6 +44,10 @@ function output(s){
 
 function clearOutput(){
   $("#output").text("");
+}
+
+function capitalize(s){
+  return s.substr(0,1).toUpperCase() + s.substr(1);
 }
 
 if (!String.prototype.format) {

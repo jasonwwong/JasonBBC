@@ -2,26 +2,34 @@ var currentToken;
 var tokenIndex;
 var cst;
 var cstIndentationLevel;
+var panicking;
 
 function parse(){
   tokenIndex = 0;
   cst = "";
   cstIndentationLevel = -1;
-  cstNeedsIndent = false;
-  cstNeedsUnindent = false;
+  panicking = false;
   currentToken = getNextToken();
   parseProduction("Program");
-  output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
-  return true;
+  if (!panicking){
+    output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
 // helper function that adds the production as a node in the cst
 // and changes the indentation level before calling the actual parse function
+// also allows parse to stop if we're panicking
 function parseProduction(s){
-  cstIndentationLevel++;
-  cst += formatNode(s);
-  window["parse" + s]();
-  cstIndentationLevel--;
+  //if (!panicking){
+    cstIndentationLevel++;
+    cst += formatNode(s);
+    window["parse" + s]();
+    cstIndentationLevel--;
+  //}
 }
 
 function getNextToken(){
@@ -51,26 +59,47 @@ function formatNode(s){
 }
 
 function checkToken(expected){
-  output("Expecting a {0}".format(expected));
-  // special case for EOF
-  if (expected == "T_EOF" && currentToken == null){
-    output("Warning: EOF not found, inserting...");
-    var token = new Token();
-    token.type = "T_EOF";
-    TOKENS.push(token);
+  // don't check token if panicking
+  if (!panicking){
+  
+    // default expecting message
+    if (expected != "T_RBrace"){
+      output("Expecting a {0}".format(expected));
+    }
+    // special case for RBrace to produce a more descriptive error
+    else{
+      output("Expecting a {0} or a statement".format(expected));
+    }
+    
+    // special case for EOF not found
+    if (expected == "T_EOF" && currentToken == null){
+      output("Warning: EOF not found, inserting...");
+      var token = new Token();
+      token.type = "T_EOF";
+      TOKENS.push(token);
+      currentToken = getNextToken();
+    }
+    
+    // current token is the one we expected
+    if (currentToken.type == expected){
+      output("Got a {0}".format(expected));
+    }
+    // unexpected token
+    else{
+      // default error message
+      if (expected != "T_RBrace"){
+        output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, expected, currentToken.type));
+      }
+      // special case for RBrace to produce a more descriptive error
+      else{
+        output("Error at line {0} character {1}: expected {2} or a statement, got {3}".format(currentToken.lineNumber, currentToken.linePosition, expected, currentToken.type));
+      }
+      panicking = true;
+    }
+    
+    // consume next token
     currentToken = getNextToken();
   }
-  // general case
-  if (currentToken.type == expected){
-    output("Got a {0}".format(expected));
-  }
-  // unexpected token
-  else{
-    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, expected, currentToken.type));
-    return;
-  }
-  // consume next token
-  currentToken = getNextToken();
 }
 
 function parseProgram(){
@@ -120,6 +149,10 @@ function parseStatement(){
   }
   else if (isBlock()){
     parseProduction("Block");
+  }
+  else{
+    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_print | T_id | T_type | T_while | T_if | T_LBrace]", currentToken.type));
+    panicking = true;
   }
 }
 
@@ -186,6 +219,10 @@ function parseExpr(){
   else if (isId()){
     parseProduction("Id");
   }
+  else{
+    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_digit | T_charlist | T_LParen | T_boolval | T_id]", currentToken.type));
+    panicking = true;
+  }
 }
 
 function isIntExpr(){
@@ -222,6 +259,10 @@ function parseBooleanExpr(){
   }
   else if (isBoolval()){
     parseProduction("Boolval");
+  }
+  else{
+    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_LParen | T_boolval]", currentToken.type));
+    panicking = true;
   }
 }
 
