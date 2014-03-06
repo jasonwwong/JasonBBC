@@ -68,11 +68,11 @@ function checkToken(expected){
   
     // default expecting message
     if (expected != "T_RBrace"){
-      output("Expecting a {0}".format(expected));
+      output("Expecting a {0}".format(expected), true);
     }
     // special case for RBrace to produce a more descriptive error
     else{
-      output("Expecting a {0} or a statement".format(expected));
+      output("Expecting a {0} or a statement".format(expected), true);
     }
     
     // special case for EOF not found
@@ -86,7 +86,7 @@ function checkToken(expected){
     
     // current token is the one we expected
     if (currentToken.type == expected){
-      output("Got a {0}".format(expected));
+      output("Got a {0}".format(expected), true);
       if (currentToken.type == "T_id"){
         var needsInserting = true;
         for (var i = 0; i < SYMBOLS.length; i++){
@@ -102,7 +102,7 @@ function checkToken(expected){
           symbol.lineNumber = currentToken.lineNumber;
           symbol.linePosition = currentToken.linePosition;
           SYMBOLS.push(symbol);
-          output("Added {0} to symbol table".format(currentToken.name));
+          output("Added {0} to symbol table".format(currentToken.name), true);
         }
       }
     }

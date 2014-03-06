@@ -39,8 +39,10 @@ function init(){
   });
 }
 
-function output(s){
-  $("#output").append(s + "<br />\n");
+function output(s, isVerbose){
+  if (!isVerbose || (isVerbose && VERBOSE)){
+    $("#output").append(s + "<br />\n");
+  }
 }
 
 function clearOutput(){

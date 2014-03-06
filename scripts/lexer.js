@@ -86,21 +86,20 @@ function lex(){
       // assign names to identifiers
       if (tokenType == "T_id"){
         token.name = currentToken;
-        output("Accepted token: {0}({1})".format(tokenType, token.name));
+        output("Accepted token: {0}({1})".format(tokenType, token.name), true);
       }
       // assign values to enumerables
       else if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
         token.value = currentToken;
-        output("Accepted token: {0}({1})".format(tokenType, token.value));
+        output("Accepted token: {0}({1})".format(tokenType, token.value), true);
       }
       else if (tokenType == "T_charlist"){
         // remove quotes from the token name
         token.value = currentToken.substr(1, currentToken.length - 2);
-        output("Accepted token: {0}({1})".format(tokenType, token.value));
+        output("Accepted token: {0}({1})".format(tokenType, token.value), true);
       }
       else{
-        //output("Accepted token: {0}".format(JSON.stringify(token)));
-        output("Accepted token: {0}".format(tokenType));
+        output("Accepted token: {0}".format(tokenType), true);
       }
       TOKENS.push(token);
       matrixPosition = 0;
@@ -109,8 +108,7 @@ function lex(){
     }
     // in the middle of creating a token and got an invalid character, panic
     else if (matrixPosition != 0){
-      //output("Lex error at line {0} character {1}: unexpected character '{2}'".format(lineNumber, linePosition, currentChar));
-      output("Lex error at line {0} character {1}: '{2}' is not a valid token".format(lineNumber, linePosition - currentToken.length, currentToken + currentChar));
+      output("Lex error at line {0} character {1}: '{2}' is not a valid token".format(lineNumber, linePosition - currentToken.length, currentToken + currentChar), true);
       return false;
     }
     currentChar = nextChar();
