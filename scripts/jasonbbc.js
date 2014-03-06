@@ -1,6 +1,7 @@
 var VERBOSE = true;
 var INPUT = "";
 var TOKENS = [];
+var SYMBOLS = [];
 
 function init(){
   var editor = ace.edit("editor");

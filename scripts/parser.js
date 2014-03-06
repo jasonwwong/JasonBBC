@@ -16,6 +16,7 @@ function parse(){
       output("<br />Warning: Input found after EOF ignored");
     }
     output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
+    output("Symbol table<pre>{0}</pre>".format(JSON.stringify(SYMBOLS)));
     return true;
   }
   else{
@@ -86,6 +87,24 @@ function checkToken(expected){
     // current token is the one we expected
     if (currentToken.type == expected){
       output("Got a {0}".format(expected));
+      if (currentToken.type == "T_id"){
+        var needsInserting = true;
+        for (var i = 0; i < SYMBOLS.length; i++){
+          if (SYMBOLS[i].name == currentToken.name){
+            needsInserting = false;
+            break;
+          }
+        }
+        if (needsInserting){
+          var symbol = new Symbol();
+          symbol.type = currentToken.type;
+          symbol.name = currentToken.name;
+          symbol.lineNumber = currentToken.lineNumber;
+          symbol.linePosition = currentToken.linePosition;
+          SYMBOLS.push(symbol);
+          output("Added {0} to symbol table".format(currentToken.name));
+        }
+      }
     }
     // unexpected token
     else{
