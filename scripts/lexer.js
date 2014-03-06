@@ -75,8 +75,9 @@ function lex(){
         startingLinePosition = linePosition;
       }
     }
-    // whitespace found at accept state, create token
-    else if ((currentChar == " " || currentChar == "\n") && "accept" in tokenMatrix[matrixPosition]){
+    // current character is not a state that can be moved to AND current state is accepting
+    // create token and re-process the current character
+    else if (tokenMatrix[matrixPosition][currentChar] == null && "accept" in tokenMatrix[matrixPosition]){
       var tokenType = tokenMatrix[matrixPosition]["accept"];
       var token = new Token();
       token.type = tokenType;
@@ -103,17 +104,13 @@ function lex(){
       }
       TOKENS.push(token);
       matrixPosition = 0;
-      startingLinePosition = -1;
       currentToken = "";
+      continue;
     }
-    // non-terminating whitespace
-    else if ((currentChar == " " || currentChar == "\n") && matrixPosition == 0){
-      // do nothing before moving to the next character
-    }
-    // invalid character, panic
-    else{
+    // in the middle of creating a token and got an invalid character, panic
+    else if (matrixPosition != 0){
       output("Lex error at line {0} character {1}: unexpected character '{2}'".format(lineNumber, linePosition, currentChar));
-      return;
+      return false;
     }
     currentChar = nextChar();
   }
