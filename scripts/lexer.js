@@ -77,7 +77,7 @@ function lex(){
     }
     // current character is not a state that can be moved to AND current state is accepting
     // create token and re-process the current character
-    else if (tokenMatrix[matrixPosition][currentChar] == null && "accept" in tokenMatrix[matrixPosition]){
+    else if (tokenMatrix[matrixPosition][currentChar] == null && (currentChar.match(/[^a-z]/) || currentToken.substr(-1).match(/\W/)) && "accept" in tokenMatrix[matrixPosition]){
       var tokenType = tokenMatrix[matrixPosition]["accept"];
       var token = new Token();
       token.type = tokenType;
@@ -110,7 +110,7 @@ function lex(){
     // in the middle of creating a token and got an invalid character, panic
     else if (matrixPosition != 0){
       //output("Lex error at line {0} character {1}: unexpected character '{2}'".format(lineNumber, linePosition, currentChar));
-      output("Lex error at line {0} character {1}: '{2}' is not a valid token".format(lineNumber, linePosition - currentToken.length, currentToken));
+      output("Lex error at line {0} character {1}: '{2}' is not a valid token".format(lineNumber, linePosition - currentToken.length, currentToken + currentChar));
       return false;
     }
     currentChar = nextChar();
