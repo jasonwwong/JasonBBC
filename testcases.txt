@@ -1,0 +1,46 @@
+Test Cases
+
+Input:
+{
+  print(3)
+  int a
+  a = 3 + 3
+  string b
+  b = ""
+  while (b == ""){
+    b = "hello world"
+  }
+  boolean c
+  c = false
+  if false{
+    if (c != true){
+    }
+  }
+} $
+Expected: Successful compilation
+Actual:   Successful compilation
+
+Input:
+{}
+Expected: Successful compilation
+Actual:   Successful compilation, Warning: EOF not found, inserting...
+
+Input:
+{}$$
+Expected: Successful compilation
+Actual:   Warning: Input found after EOF ignored
+
+Input:
+prin
+Expected: Failed compilation
+Actual:   Failed compilation, Lex error at line 1 character 1: 'prin' is not a valid token
+
+Input:
+printt
+Expected: Failed compilation
+Actual:   Failed compilation, Lex error at line 1 character 1: 'printt' is not a valid token
+
+Input:
+{a = 44}
+Expected: Failed compilation
+Actual:   Failed compilation, Error at line 1 character 8: expected [T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace], got T_digit

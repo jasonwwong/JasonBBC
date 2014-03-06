@@ -12,8 +12,8 @@ function parse(){
   currentToken = getNextToken();
   parseProduction("Program");
   if (!panicking){
-    if (tokenIndex < TOKENS.length - 1){
-      output("<br />Warning: Input found after EOF ignored<br />");
+    if (tokenIndex < TOKENS.length + 1){
+      output("<br />Warning: Input found after EOF ignored");
     }
     output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
     return true;
@@ -36,7 +36,7 @@ function parseProduction(s){
 }
 
 function getNextToken(){
-  if (tokenIndex < TOKENS.length){
+  if (tokenIndex <= TOKENS.length){
     return TOKENS[tokenIndex++];
   }
   return null;
@@ -100,8 +100,10 @@ function checkToken(expected){
       panicking = true;
     }
     
-    // consume next token
-    currentToken = getNextToken();
+    // consume next token if not eof
+    if (currentToken != "T_EOF"){
+      currentToken = getNextToken();
+    }
   }
 }
 
