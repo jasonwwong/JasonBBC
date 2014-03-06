@@ -27,12 +27,12 @@ function parse(){
 // and changes the indentation level before calling the actual parse function
 // also allows parse to stop if we're panicking
 function parseProduction(s){
-  //if (!panicking){
+  if (!panicking){
     cstIndentationLevel++;
     cst += formatNode(s);
     window["parse" + s]();
     cstIndentationLevel--;
-  //}
+  }
 }
 
 function getNextToken(){
