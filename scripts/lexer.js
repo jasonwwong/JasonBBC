@@ -82,19 +82,26 @@ function lex(){
       token.type = tokenType;
       token.lineNumber = lineNumber;
       token.linePosition = startingLinePosition;
+      // assign names to identifiers
       if (tokenType == "T_id"){
         token.name = currentToken;
+        output("Accepted token: {0}({1})".format(tokenType, token.name));
       }
+      // assign values to enumerables
       else if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
         token.value = currentToken;
+        output("Accepted token: {0}({1})".format(tokenType, token.value));
       }
       else if (tokenType == "T_charlist"){
         // remove quotes from the token name
         token.value = currentToken.substr(1, currentToken.length - 2);
+        output("Accepted token: {0}({1})".format(tokenType, token.value));
+      }
+      else{
+        //output("Accepted token: {0}".format(JSON.stringify(token)));
+        output("Accepted token: {0}".format(tokenType));
       }
       TOKENS.push(token);
-      //output("Accepted token: {0}".format(JSON.stringify(token)));
-      output("Accepted token: {0}".format(tokenType));
       matrixPosition = 0;
       startingLinePosition = -1;
       currentToken = "";
