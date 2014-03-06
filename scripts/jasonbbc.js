@@ -15,9 +15,9 @@ function init(){
     output("Starting compilation");
     // call each step of the compilation process and terminate if one fails
     for (var i = 0; i < steps.length; i++){
-      output("<hr />Starting " + steps[i]);
+      output("<hr />Starting {0}".format(steps[i]));
       if (window[steps[i]]()){
-        output("Successfully completed {0}".format(steps[i]));
+        output("Successfully completed {0}!".format(steps[i]));
       }
       else{
         output("Failed on {0}".format(steps[i]));

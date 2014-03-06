@@ -51,3 +51,6 @@ header h1{
 #toolbar div:last-child{
   margin-left: 5px;
 }
+pre{
+  margin: 0;
+}

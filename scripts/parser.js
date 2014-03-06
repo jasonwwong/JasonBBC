@@ -1,11 +1,27 @@
 var currentToken;
 var tokenIndex;
+var cst;
+var cstIndentationLevel;
 
 function parse(){
   tokenIndex = 0;
+  cst = "";
+  cstIndentationLevel = -1;
+  cstNeedsIndent = false;
+  cstNeedsUnindent = false;
   currentToken = getNextToken();
-  parseProgram();
+  parseProduction("Program");
+  output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
   return true;
+}
+
+// helper function that adds the production as a node in the cst
+// and changes the indentation level before calling the actual parse function
+function parseProduction(s){
+  cstIndentationLevel++;
+  cst += indentNode(s);
+  window["parse" + s]();
+  cstIndentationLevel--;
 }
 
 function getNextToken(){
@@ -13,6 +29,13 @@ function getNextToken(){
     return TOKENS[tokenIndex++];
   }
   return null;
+}
+
+function indentNode(s){
+  for (var i = 0; i < cstIndentationLevel; i++){
+    s = "| " + s;
+  }
+  return s + "\n";
 }
 
 function checkToken(expected){
@@ -39,7 +62,7 @@ function checkToken(expected){
 }
 
 function parseProgram(){
-  parseBlock();
+  parseProduction("Block");
   checkToken("T_EOF");
 }
 
@@ -49,14 +72,14 @@ function isBlock(){
 
 function parseBlock(){
   checkToken("T_LBrace");
-  parseStatementList();
+  parseProduction("StatementList");
   checkToken("T_RBrace");
 }
 
 function parseStatementList(){
   if (isStatement()){
-    parseStatement();
-    parseStatementList();
+    parseProduction("Statement");
+    parseProduction("StatementList");
   }
   else{
     // epsilon production, do nothing
@@ -69,22 +92,22 @@ function isStatement(){
 
 function parseStatement(){
   if (isPrintStatement()){
-    parsePrintStatement();
+    parseProduction("PrintStatement");
   }
   else if (isAssignmentStatement()){
-    parseAssignmentStatement();
+    parseProduction("AssignmentStatement");
   }
   else if (isVarDecl()){
-    parseVarDecl();
+    parseProduction("VarDecl");
   }
   else if (isWhileStatement()){
-    parseWhileStatement();
+    parseProduction("WhileStatement");
   }
   else if (isIfStatement()){
-    parseIfStatement();
+    parseProduction("IfStatement");
   }
   else if (isBlock()){
-    parseBlock();
+    parseProduction("Block");
   }
 }
 
@@ -95,7 +118,7 @@ function isPrintStatement(){
 function parsePrintStatement(){
   checkToken("T_print");
   checkToken("T_LParen");
-  parseExpr();
+  parseProduction("Expr");
   checkToken("T_RParen");
 }
 
@@ -104,9 +127,9 @@ function isAssignmentStatement(){
 }
 
 function parseAssignmentStatement(){
-  parseId();
+  parseProduction("Id");
   checkToken("T_assignment");
-  parseExpr();
+  parseProduction("Expr");
 }
 
 function isVarDecl(){
@@ -114,8 +137,8 @@ function isVarDecl(){
 }
 
 function parseVarDecl(){
-  parseType();
-  parseId();
+  parseProduction("Type");
+  parseProduction("Id");
 }
 
 function isWhileStatement(){
@@ -124,8 +147,8 @@ function isWhileStatement(){
 
 function parseWhileStatement(){
   checkToken("T_while");
-  parseBooleanExpr();
-  parseBlock();
+  parseProduction("BooleanExpr");
+  parseProduction("Block");
 }
 
 function isIfStatement(){
@@ -134,22 +157,22 @@ function isIfStatement(){
 
 function parseIfStatement(){
   checkToken("T_if");
-  parseBooleanExpr();
-  parseBlock();
+  parseProduction("BooleanExpr");
+  parseProduction("Block");
 }
 
 function parseExpr(){
   if (isIntExpr()){
-    parseIntExpr();
+    parseProduction("IntExpr");
   }
   else if (isStringExpr()){
-    parseStringExpr();
+    parseProduction("StringExpr");
   }
   else if (isBooleanExpr()){
-    parseBooleanExpr();
+    parseProduction("BooleanExpr");
   }
   else if (isId()){
-    parseId();
+    parseProduction("Id");
   }
 }
 
@@ -158,10 +181,10 @@ function isIntExpr(){
 }
 
 function parseIntExpr(){
-  parseDigit();
+  parseProduction("Digit");
   if (isIntop()){
-    parseIntop();
-    parseExpr();
+    parseProduction("Intop");
+    parseProduction("Expr");
   }
 }
 
@@ -180,13 +203,13 @@ function isBooleanExpr(){
 function parseBooleanExpr(){
   if (currentToken.type == "T_LParen"){
     checkToken("T_LParen");
-    parseExpr();
-    parseBoolop();
-    parseExpr();
+    parseProduction("Expr");
+    parseProduction("Boolop");
+    parseProduction("Expr");
     checkToken("T_RParen");
   }
   else if (isBoolval()){
-    parseBoolval();
+    parseProduction("Boolval");
   }
 }
 
