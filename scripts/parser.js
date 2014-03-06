@@ -95,7 +95,7 @@ function checkToken(expected){
       }
       // special case for RBrace to produce a more descriptive error
       else{
-        output("Error at line {0} character {1}: expected {2} or a statement, got {3}".format(currentToken.lineNumber, currentToken.linePosition, expected, currentToken.type));
+        output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace]", currentToken.type));
       }
       panicking = true;
     }
@@ -152,10 +152,6 @@ function parseStatement(){
   }
   else if (isBlock()){
     parseProduction("Block");
-  }
-  else{
-    output("Error at line {0} character {1}: expected {2}, got {3}".format(currentToken.lineNumber, currentToken.linePosition, "[T_print | T_id | T_type | T_while | T_if | T_LBrace]", currentToken.type));
-    panicking = true;
   }
 }
 
