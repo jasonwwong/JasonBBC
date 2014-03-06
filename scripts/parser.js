@@ -19,7 +19,7 @@ function parse(){
 // and changes the indentation level before calling the actual parse function
 function parseProduction(s){
   cstIndentationLevel++;
-  cst += indentNode(s);
+  cst += formatNode(s);
   window["parse" + s]();
   cstIndentationLevel--;
 }
@@ -31,9 +31,16 @@ function getNextToken(){
   return null;
 }
 
-function indentNode(s){
+function formatNode(s){
+  var tokenType = "T_" + s.toLowerCase();
   for (var i = 0; i < cstIndentationLevel; i++){
     s = "| " + s;
+  }
+  if (tokenType == currentToken.type && currentToken.value != null){
+    s += "({0})".format(currentToken.value);
+  }
+  else if (tokenType == currentToken.type && currentToken.name != null){
+    s += "({0})".format(currentToken.name);
   }
   return s + "\n";
 }
