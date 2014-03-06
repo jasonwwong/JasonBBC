@@ -82,7 +82,7 @@ function lex(){
       var token = new Token();
       token.type = tokenType;
       token.lineNumber = lineNumber;
-      token.linePosition = startingLinePosition;
+      token.linePosition = linePosition;
       // assign names to identifiers
       if (tokenType == "T_id"){
         token.name = currentToken;
