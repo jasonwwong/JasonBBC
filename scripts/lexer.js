@@ -109,7 +109,8 @@ function lex(){
     }
     // in the middle of creating a token and got an invalid character, panic
     else if (matrixPosition != 0){
-      output("Lex error at line {0} character {1}: unexpected character '{2}'".format(lineNumber, linePosition, currentChar));
+      //output("Lex error at line {0} character {1}: unexpected character '{2}'".format(lineNumber, linePosition, currentChar));
+      output("Lex error at line {0} character {1}: '{2}' is not a valid token".format(lineNumber, linePosition - currentToken.length, currentToken));
       return false;
     }
     currentChar = nextChar();
