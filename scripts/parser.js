@@ -37,7 +37,12 @@ function formatNode(s){
     s = "| " + s;
   }
   if (tokenType == currentToken.type && currentToken.value != null){
-    s += "({0})".format(currentToken.value);
+    if (tokenType == "T_charlist"){
+      s += "(\"{0}\")".format(currentToken.value);
+    }
+    else{
+      s += "({0})".format(currentToken.value);
+    }
   }
   else if (tokenType == currentToken.type && currentToken.name != null){
     s += "({0})".format(currentToken.name);
@@ -200,7 +205,7 @@ function isStringExpr(){
 }
 
 function parseStringExpr(){
-  checkToken("T_charlist");
+  parseProduction("CharList");
 }
 
 function isBooleanExpr(){
