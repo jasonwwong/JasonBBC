@@ -1,18 +1,21 @@
 var currentToken;
 var tokenIndex;
 var cst;
+var currentNode;
 var cstIndentationLevel;
 var panicking;
 
 function parse(){
   tokenIndex = 0;
-  cst = "";
+  cst = new Node();
+  cst.name = "CST";
+  currentNode = cst;
   cstIndentationLevel = -1;
   panicking = false;
   currentToken = getNextToken();
   parseProduction("Program");
   if (!panicking){
-    output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
+    output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(printNode(cst)));
     output("Symbol table<pre>{0}</pre>".format(JSON.stringify(SYMBOLS)));
     return true;
   }
@@ -21,15 +24,31 @@ function parse(){
   }
 }
 
+function printNode(node){
+  var output = "";
+  if (cstIndentationLevel >= 0){
+    output += indentNode(node.name);
+  }
+  cstIndentationLevel++;
+  for (var i = 0; i < node.children.length; i++){
+    output += printNode(node.children[i]);
+  }
+  cstIndentationLevel--;
+  return output;
+}
+
 // helper function that adds the production as a node in the cst
 // and changes the indentation level before calling the actual parse function
 // also allows parse to stop if we're panicking
 function parseProduction(s){
   if (!panicking){
-    cstIndentationLevel++;
-    cst += formatNode(s);
+    var node = new Node();
+    node.name = formatNode(s);
+    node.parent = currentNode;
+    currentNode.children.push(node);
+    currentNode = node;
     window["parse" + s]();
-    cstIndentationLevel--;
+    currentNode = currentNode.parent;
   }
 }
 
@@ -46,9 +65,6 @@ function getNextToken(){
 
 function formatNode(s){
   var tokenType = "T_" + s.toLowerCase();
-  for (var i = 0; i < cstIndentationLevel; i++){
-    s = "| " + s;
-  }
   if (tokenType == currentToken.type && currentToken.value != null){
     if (tokenType == "T_charlist"){
       s += "(\"{0}\")".format(currentToken.value);
@@ -61,6 +77,15 @@ function formatNode(s){
     s += "({0})".format(currentToken.name);
   }
   return s + "\n";
+}
+
+function indentNode(s){
+  if (cstIndentationLevel > 0){
+    for (var i = 0; i < cstIndentationLevel; i++){
+      s = "| " + s;
+    }
+  }
+  return s;
 }
 
 function checkToken(expected){
