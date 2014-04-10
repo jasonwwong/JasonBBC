@@ -104,6 +104,11 @@ function lex(){
       TOKENS.push(token);
       matrixPosition = 0;
       currentToken = "";
+      // stop lexing if at eof
+      if (tokenType == "T_EOF" && nextChar() != ""){
+        output("Warning: Input found after EOF ignored");
+        return true;
+      }
       continue;
     }
     // in the middle of creating a token and got an invalid character, panic

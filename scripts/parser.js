@@ -12,9 +12,6 @@ function parse(){
   currentToken = getNextToken();
   parseProduction("Program");
   if (!panicking){
-    if (tokenIndex < TOKENS.length){
-      output("<br />Warning: Input found after EOF ignored");
-    }
     output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(cst));
     output("Symbol table<pre>{0}</pre>".format(JSON.stringify(SYMBOLS)));
     return true;
