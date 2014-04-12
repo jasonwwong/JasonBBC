@@ -1,15 +1,15 @@
 var currentToken;
 var tokenIndex;
 var cst;
-var currentNode;
+var currentCstNode;
 var cstIndentationLevel;
 var panicking;
 
 function parse(){
   tokenIndex = 0;
   cst = new Node();
-  cst.name = "CST";
-  currentNode = cst;
+  cst.contents = "CST";
+  currentCstNode = cst;
   cstIndentationLevel = -1;
   panicking = false;
   currentToken = getNextToken();
@@ -27,7 +27,7 @@ function parse(){
 function printNode(node){
   var output = "";
   if (cstIndentationLevel >= 0){
-    output += indentNode(node.name);
+    output += formatNode(node.contents);
   }
   cstIndentationLevel++;
   for (var i = 0; i < node.children.length; i++){
@@ -43,12 +43,17 @@ function printNode(node){
 function parseProduction(s){
   if (!panicking){
     var node = new Node();
-    node.name = formatNode(s);
-    node.parent = currentNode;
-    currentNode.children.push(node);
-    currentNode = node;
+    if (currentToken.type.substr(2) == s.toLowerCase()){
+      node.contents = {name: s, token: currentToken};
+    }
+    else{
+      node.contents = {name: s}
+    }
+    node.parent = currentCstNode;
+    currentCstNode.children.push(node);
+    currentCstNode = node;
     window["parse" + s]();
-    currentNode = currentNode.parent;
+    currentCstNode = currentCstNode.parent;
   }
 }
 
@@ -63,29 +68,17 @@ function getNextToken(){
   return nullToken;
 }
 
-function formatNode(s){
-  var tokenType = "T_" + s.toLowerCase();
-  if (tokenType == currentToken.type && currentToken.value != null){
-    if (tokenType == "T_charlist"){
-      s += "(\"{0}\")".format(currentToken.value);
-    }
-    else{
-      s += "({0})".format(currentToken.value);
-    }
+function formatNode(c){
+  var s = c.name;
+  if (c.token != null && c.token.value != null){
+    s += "({0})".format(c.token.value);
   }
-  else if (tokenType == currentToken.type && currentToken.name != null){
-    s += "({0})".format(currentToken.name);
-  }
-  return s + "\n";
-}
-
-function indentNode(s){
   if (cstIndentationLevel > 0){
     for (var i = 0; i < cstIndentationLevel; i++){
       s = "| " + s;
     }
   }
-  return s;
+  return s + "\n";
 }
 
 function checkToken(expected){

@@ -85,8 +85,8 @@ function lex(){
       token.linePosition = linePosition;
       // assign names to identifiers
       if (tokenType == "T_id"){
-        token.name = currentToken;
-        output("Accepted token: {0}({1})".format(tokenType, token.name), true);
+        token.value = currentToken;
+        output("Accepted token: {0}({1})".format(tokenType, token.value), true);
       }
       // assign values to enumerables
       else if (tokenType == "T_type" || tokenType == "T_boolop" || tokenType == "T_boolval" || tokenType == "T_digit"){
