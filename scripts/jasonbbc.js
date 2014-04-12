@@ -2,6 +2,8 @@ var VERBOSE = true;
 var INPUT;
 var TOKENS;
 var SYMBOLS;
+var CST;
+var ENVIRONMENT;
 
 function init(){
   var editor = ace.edit("editor");
@@ -10,7 +12,7 @@ function init(){
   editor.getSession().setUseSoftTabs(true);
   $("#compile").on("click", function(){
     INPUT = editor.getValue() + " ";
-    var steps = ["lex", "parse"];
+    var steps = ["lex", "parse", "analyze"];
     clearOutput();
     TOKENS = [];
     SYMBOLS = [];

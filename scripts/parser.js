@@ -1,21 +1,20 @@
 var currentToken;
 var tokenIndex;
-var cst;
 var currentCstNode;
 var cstIndentationLevel;
 var panicking;
 
 function parse(){
   tokenIndex = 0;
-  cst = new Node();
-  cst.contents = "CST";
-  currentCstNode = cst;
+  CST = new Node();
+  CST.contents = "CST";
+  currentCstNode = CST;
   cstIndentationLevel = -1;
   panicking = false;
   currentToken = getNextToken();
   parseProduction("Program");
   if (!panicking){
-    output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(printNode(cst)));
+    output("<br />Concrete Syntax Tree<pre>{0}</pre>".format(printNode(CST)));
     output("Symbol table<pre>{0}</pre>".format(JSON.stringify(SYMBOLS)));
     return true;
   }
