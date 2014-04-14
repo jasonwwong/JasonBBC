@@ -1,7 +1,6 @@
 var VERBOSE = true;
 var INPUT;
 var TOKENS;
-var SYMBOLS;
 var CST;
 var ENVIRONMENT;
 

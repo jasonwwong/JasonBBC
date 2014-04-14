@@ -5,6 +5,8 @@ function analyze(){
   ENVIRONMENT.contents = "Environment";
   currentEnvNode = ENVIRONMENT;
   traverse(CST);
+  output("Symbol table:");
+  printSymbolTable(ENVIRONMENT);
   return true;
 }
 
@@ -14,6 +16,9 @@ function traverse(node){
     output("BLOCK START");
     var envNode = new Node();
     envNode.contents = [];
+    // the number of parallel scopes there are to this block
+    var parallelScopes = currentEnvNode.children.length + 1;
+    envNode.contents["scopeLevel"] = parallelScopes;
     envNode.parent = currentEnvNode;
     currentEnvNode.children.push(envNode);
     currentEnvNode = envNode;
@@ -74,6 +79,23 @@ function traverse(node){
   }
 }
 
+function printSymbolTable(node){
+  if (node.contents != "Environment"){
+    // iterate through the identifiers in each scope
+    for (var key in node.contents){
+      if (key != "scopeLevel" && node.contents.hasOwnProperty(key)){
+        var token = node.contents[key];
+        output("{0}: {1}, line {2}, character {3}, scope {4}".format(token.name, token.type, token.lineNumber, token.linePosition, getScope(node)));
+      }
+    }
+  }
+  if (node.children != null){
+    for (var i = 0; i < node.children.length; i++){
+      printSymbolTable(node.children[i]);
+    }
+  }
+}
+
 function inScope(node, idname){
   if (node.contents[idname] != null){
     return true;
@@ -83,5 +105,15 @@ function inScope(node, idname){
   }
   else{
     return false;
+  }
+}
+
+
+function getScope(node){
+  if (node.parent.contents == "Environment"){
+    return "1";
+  }
+  else{
+    return getScope(node.parent) + "." + node.contents["scopeLevel"];
   }
 }
