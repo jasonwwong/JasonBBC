@@ -1,4 +1,6 @@
 var currentEnvNode;
+var currentAstNode;
+var astIndentationLevel;
 
 function analyze(){
   ENVIRONMENT = new Node();
@@ -9,6 +11,13 @@ function analyze(){
   if (analyzeSuccessful){
     output("Passed scope and type check!<br /><br />Symbol table:");
     printSymbolTable(ENVIRONMENT);
+    output("<br />AST:");
+    AST = new Node();
+    AST.contents = "AST";
+    currentAstNode = AST;
+    buildAST(CST.children[0]);
+    astIndentationLevel = -1;
+    output("<pre>{0}</pre>".format(printAST(AST)));
     return true;
   }
   else{
@@ -197,4 +206,79 @@ function setUsed(node, idname){
   else if (node.parent != null){
     setUsed(node.parent, idname);
   }
+}
+
+function buildAST(node){
+  if (node.contents.name == "Block" || node.contents.name == "WhileStatement" || node.contents.name == "WhileStatement"){
+    insertNewAstNode(node.contents.name);
+  }
+  else if (node.contents.name == "PrintStatement"){
+    insertNewAstNode("Print");
+    insertNewAstNode(getNameOfLeaf(node));
+    currentAstNode = currentAstNode.parent.parent;
+    return;
+  }
+  else if (node.contents.name.substr(-9) == "Statement" && node.contents.name.length > 9){
+    insertNewAstNode(node.contents.name);
+    insertNewAstNode(getNameOfLeaf(node.children[0]));
+    currentAstNode = currentAstNode.parent;
+    insertNewAstNode(getNameOfLeaf(node.children[1]));
+    currentAstNode = currentAstNode.parent.parent;
+    return;
+  }
+  else if (node.contents.name == "VarDecl"){
+    insertNewAstNode("VarDecl");
+    insertNewAstNode(getNameOfLeaf(node.children[0]));
+    currentAstNode = currentAstNode.parent;
+    insertNewAstNode(getNameOfLeaf(node.children[1]));
+    currentAstNode = currentAstNode.parent.parent;
+    return;
+  }
+  for (var i = 0; i < node.children.length; i++){
+    buildAST(node.children[i]);
+  }
+}
+
+function printAST(node){
+  var output = "";
+  if (astIndentationLevel >= 0){
+    output += formatAstNode(node.contents);
+  }
+  astIndentationLevel++;
+  for (var i = 0; i < node.children.length; i++){
+    output += printAST(node.children[i]);
+  }
+  astIndentationLevel--;
+  return output;
+}
+
+function formatAstNode(c){
+  var s = c.name;
+  if (astIndentationLevel > 0){
+    for (var i = 0; i < astIndentationLevel; i++){
+      s = "| " + s;
+    }
+  }
+  return s + "\n";
+}
+
+function insertNewAstNode(contents){
+  var astNode = new Node();
+  astNode.contents = [];
+  astNode.contents.name = contents;
+  astNode.parent = currentAstNode;
+  currentAstNode.children.push(astNode);
+  currentAstNode = astNode;
+}
+
+function getNameOfLeaf(node){
+  if (node.children.length == 0){
+    if (node.contents.name == "CharList"){
+      return '"{0}"'.format(node.contents.token.value);
+    }
+    else{
+      return node.contents.token.value;
+    }
+  }
+  else return getNameOfLeaf(node.children[0]);
 }

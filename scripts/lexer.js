@@ -106,7 +106,7 @@ function lex(){
       currentToken = "";
       // stop lexing if at eof
       if (tokenType == "T_EOF" && nextChar() != ""){
-        output("Warning: Input found after EOF ignored");
+        output("Warning: Input found after EOF ignored<br />");
         return true;
       }
       continue;
