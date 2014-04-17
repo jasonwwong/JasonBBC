@@ -4,16 +4,21 @@ function analyze(){
   ENVIRONMENT = new Node();
   ENVIRONMENT.contents = "Environment";
   currentEnvNode = ENVIRONMENT;
-  traverse(CST);
-  output("Symbol table:");
-  printSymbolTable(ENVIRONMENT);
-  return true;
+  output("Starting scope and type check...");
+  var analyzeSuccessful = analyzeNode(CST);
+  if (analyzeSuccessful){
+    output("Passed scope and type check!<br /><br />Symbol table:");
+    printSymbolTable(ENVIRONMENT);
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
-function traverse(node){
+function analyzeNode(node){
   // block node, signifying the start of a block
   if (node.contents.name == "Block"){
-    output("BLOCK START");
     var envNode = new Node();
     envNode.contents = [];
     // the number of parallel scopes there are to this block
@@ -22,11 +27,12 @@ function traverse(node){
     envNode.parent = currentEnvNode;
     currentEnvNode.children.push(envNode);
     currentEnvNode = envNode;
+    output("Opening scope {0}".format(getScope(currentEnvNode)));
   }
   
   // statementlist node with no children, signifying the end of a block
   else if (node.contents.name == "StatementList" && node.children.length == 0){
-    output("BLOCK END");
+    output("Closing scope {0}".format(getScope(currentEnvNode)));
     currentEnvNode = currentEnvNode.parent;
   }
   
@@ -34,6 +40,8 @@ function traverse(node){
   else if (node.contents.name == "Id"){
     var statement = node.parent.contents.name;
     var idname = node.contents.token.value;
+    var lineNumber = node.contents.token.lineNumber;
+    var linePosition = node.contents.token.linePosition;
     var idtype;
     
     // determine the type of the id
@@ -41,11 +49,12 @@ function traverse(node){
       idtype = node.parent.children[0].contents.token.value;
     }
     else if (!inScope(currentEnvNode, idname)){
-      output("Warning: uninitialized variable '{0}' used on line {1} character y".format(idname, node.contents.token.lineNumber));
+      output("Warning: uninitialized variable '{0}' used on line {1} character {2}".format(idname, lineNumber, linePosition));
       idtype = "?";
     }
     else{
-      idtype = currentEnvNode.contents[idname];
+      idtype = getType(currentEnvNode, idname);
+      setUsed(currentEnvNode, idname);
     }
     
     // handle variable declaration
@@ -60,23 +69,70 @@ function traverse(node){
         token.type = idtype;
         token.value = null;
         currentEnvNode.contents[idname] = token;
-        output("variable declared: {1} {0}".format(idname, idtype));
+        output("Variable declared: {1} {0}".format(idname, idtype));
       }
       
       // variable redeclared
       else{
-        output("Error: redeclared variable '{0}' on line {0} character y".format(idname, node.contents.token.lineNumber));
+        output("Error: redeclared variable '{0}' on line {1} character {2}".format(idname, lineNumber, linePosition));
+        return;
       }
     }
     
-    // handle other variable uses
-    else{
-      output("variable referenced: {0}".format(idname));
+    // typecheck expressions
+    else if (statement == "Expr"){
+      var typeOfExpression = node.parent.parent.contents.name;
+      if (typeOfExpression == "IntExpr" && idtype != "int"){
+        output("Error: type mismatch on line {0} character {1}, expected {2} to be int, was {3}".format(lineNumber, linePosition, idname, idtype));
+        return false;
+      }
+      else if (typeOfExpression == "BooleanExpr"){
+        var tokenBeingComparedTo = node.parent.parent.children[2].children[0];
+        var expectedType = tokenBeingComparedTo.contents.name;
+        if (expectedType == "Id"){
+          expectedType = tokenBeingComparedTo.type;
+        }
+        else{
+          // trim off the "Expr" from token name, e.g. "StringExpr"
+          expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
+        }
+        if (idtype != expectedType){
+          output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
+          return false;
+        }
+        else{
+          output("Type check passed: {0} == {1}".format(idtype, expectedType));
+        }
+      }
+    }
+    
+    // typecheck assignments
+    else if (statement == "AssignmentStatement"){
+      var tokenBeingComparedTo = node.parent.children[1].children[0];
+      var expectedType = tokenBeingComparedTo.contents.name;
+      if (expectedType == "Id"){
+        expectedType = tokenBeingComparedTo.type;
+      }
+      else{
+        // trim off the "Expr" from token name, e.g. "StringExpr"
+        expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
+      }
+      if (idtype != expectedType){
+        output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
+        return false;
+      }
+      else{
+        output("Type check passed: {0} == {1}".format(idtype, expectedType));
+      }
     }
   }
   for (var i = 0; i < node.children.length; i++){
-    traverse(node.children[i]);
+    var analyzeSuccessful = analyzeNode(node.children[i]);
+    if (!analyzeSuccessful){
+      return false;
+    }
   }
+  return true;
 }
 
 function printSymbolTable(node){
@@ -85,7 +141,11 @@ function printSymbolTable(node){
     for (var key in node.contents){
       if (key != "scopeLevel" && node.contents.hasOwnProperty(key)){
         var token = node.contents[key];
-        output("{0}: {1}, line {2}, character {3}, scope {4}".format(token.name, token.type, token.lineNumber, token.linePosition, getScope(node)));
+        var used = "";
+        if (token.used == false){
+          used = "un";
+        }
+        output("{0}: {1}, line {2}, character {3}, scope {4}, {5}used".format(token.name, token.type, token.lineNumber, token.linePosition, getScope(node), used));
       }
     }
   }
@@ -108,12 +168,33 @@ function inScope(node, idname){
   }
 }
 
-
 function getScope(node){
   if (node.parent.contents == "Environment"){
     return "1";
   }
   else{
     return getScope(node.parent) + "." + node.contents["scopeLevel"];
+  }
+}
+
+function getType(node, idname){
+  if (node.contents[idname] != null){
+    return node.contents[idname].type;
+  }
+  else if (node.parent != null){
+    return getType(node.parent, idname);
+  }
+  else{
+    return false;
+  }
+}
+
+function setUsed(node, idname){
+  if (node.contents[idname] != null){
+    node.contents[idname].used = true;
+    output("Variable used: {0}, declared in scope {1}".format(idname, node.contents["scopeLevel"]));
+  }
+  else if (node.parent != null){
+    setUsed(node.parent, idname);
   }
 }

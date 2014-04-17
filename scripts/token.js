@@ -3,4 +3,5 @@ function Token(){
   this.lineNumber = null;
   this.linePosition = null;
   this.value = null;
+  this.used = false;
 }
