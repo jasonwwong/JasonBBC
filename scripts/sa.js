@@ -209,7 +209,7 @@ function setUsed(node, idname){
 }
 
 function buildAST(node){
-  if (node.contents.name == "Block" || node.contents.name == "WhileStatement" || node.contents.name == "WhileStatement"){
+  if (node.contents.name == "Block" || node.contents.name == "WhileStatement"){
     insertNewAstNode(node.contents.name);
   }
   else if (node.contents.name == "PrintStatement"){
@@ -231,6 +231,14 @@ function buildAST(node){
     insertNewAstNode(getNameOfLeaf(node.children[0]));
     currentAstNode = currentAstNode.parent;
     insertNewAstNode(getNameOfLeaf(node.children[1]));
+    currentAstNode = currentAstNode.parent.parent;
+    return;
+  }
+  else if (node.contents.name == "BooleanExpr"){
+    insertNewAstNode(node.children[1].contents.token.value);
+    insertNewAstNode(getNameOfLeaf(node.children[0]));
+    currentAstNode = currentAstNode.parent;
+    insertNewAstNode(getNameOfLeaf(node.children[2]));
     currentAstNode = currentAstNode.parent.parent;
     return;
   }
