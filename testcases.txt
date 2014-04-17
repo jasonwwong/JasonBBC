@@ -20,32 +20,38 @@ Input:
 Expected: Successful compilation
 Actual:   Successful compilation
 
-Input:
-{}
+Input:    {}
 Expected: Successful compilation
 Actual:   Successful compilation, Warning: EOF not found, inserting...
 
-Input:
-{}$$
+Input:    {}$$
 Expected: Successful compilation
 Actual:   Warning: Input found after EOF ignored
 
-Input:
-prin
+Input:    prin
 Expected: Failed compilation
 Actual:   Failed compilation, Lex error at line 1 character 1: 'prin' is not a valid token
 
-Input:
-printt
+Input:    printt
 Expected: Failed compilation
 Actual:   Failed compilation, Lex error at line 1 character 1: 'printt' is not a valid token
 
-Input:
-{a = 44}
+Input:    {a = 44}
 Expected: Failed compilation
 Actual:   Failed compilation, Error at line 1 character 8: expected [T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace], got T_digit
 
-Input:
-{
+Input:    {
 Expected: Failed compilation
 Actual:   Failed compilation, Error at line 1 character 3: expected [T_print | T_id | T_type | T_while | T_if | T_LBrace | T_RBrace], got end of input
+
+Input:    {int a int a}$
+Expected: Failed compilation
+Actual:   Failed compilation, Error: redeclared variable 'a' on line 5 character 0
+
+Input:    {a = 0}$
+Expected: Successful compilation
+Actual:   Warning: uninitialized variable 'a' used on line 3 character 4
+
+Input:    {int a a = ""}$
+Expected: Failed compilation
+Actual:   Failed compilation, Error: type mismatch on line 4 character 4, expected a to be string, was int

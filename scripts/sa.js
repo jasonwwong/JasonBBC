@@ -105,7 +105,7 @@ function analyzeNode(node){
           // trim off the "Expr" from token name, e.g. "StringExpr"
           expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
         }
-        if (idtype != expectedType){
+        if (idtype != expectedType && (idtype != "?" && expectedType != "?")){
           output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
           return false;
         }
@@ -126,7 +126,7 @@ function analyzeNode(node){
         // trim off the "Expr" from token name, e.g. "StringExpr"
         expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
       }
-      if (idtype != expectedType){
+      if (idtype != expectedType && (idtype != "?" && expectedType != "?")){
         output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
         return false;
       }
