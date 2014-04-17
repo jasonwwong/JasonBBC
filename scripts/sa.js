@@ -209,7 +209,7 @@ function setUsed(node, idname){
 }
 
 function buildAST(node){
-  if (node.contents.name == "Block" || node.contents.name == "WhileStatement"){
+  if (node.contents.name == "Block" || node.contents.name == "WhileStatement" || node.contents.name == "IfStatement"){
     insertNewAstNode(node.contents.name);
   }
   else if (node.contents.name == "PrintStatement"){
@@ -235,11 +235,17 @@ function buildAST(node){
     return;
   }
   else if (node.contents.name == "BooleanExpr"){
-    insertNewAstNode(node.children[1].contents.token.value);
-    insertNewAstNode(getNameOfLeaf(node.children[0]));
-    currentAstNode = currentAstNode.parent;
-    insertNewAstNode(getNameOfLeaf(node.children[2]));
-    currentAstNode = currentAstNode.parent.parent;
+    if (node.children[1] != null){
+      insertNewAstNode(node.children[1].contents.token.value);
+      insertNewAstNode(getNameOfLeaf(node.children[0]));
+      currentAstNode = currentAstNode.parent;
+      insertNewAstNode(getNameOfLeaf(node.children[2]));
+      currentAstNode = currentAstNode.parent.parent;
+    }
+    else{
+      insertNewAstNode(node.children[0].contents.token.value);
+      currentAstNode = currentAstNode.parent.parent;
+    }
     return;
   }
   for (var i = 0; i < node.children.length; i++){
