@@ -99,7 +99,7 @@ function analyzeNode(node){
         var tokenBeingComparedTo = node.parent.parent.children[2].children[0];
         var expectedType = tokenBeingComparedTo.contents.name;
         if (expectedType == "Id"){
-          expectedType = tokenBeingComparedTo.type;
+          expectedType = getType(currentEnvNode, tokenBeingComparedTo.contents.token.value);
         }
         else{
           // trim off the "Expr" from token name, e.g. "StringExpr"
@@ -120,7 +120,7 @@ function analyzeNode(node){
       var tokenBeingComparedTo = node.parent.children[1].children[0];
       var expectedType = tokenBeingComparedTo.contents.name;
       if (expectedType == "Id"){
-        expectedType = tokenBeingComparedTo.type;
+        expectedType = getType(currentEnvNode, tokenBeingComparedTo.contents.token.value);
       }
       else{
         // trim off the "Expr" from token name, e.g. "StringExpr"
