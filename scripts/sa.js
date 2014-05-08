@@ -221,9 +221,8 @@ function buildAST(node){
     }
     climb = true;
   }
-  if (node.children.length == 0){
+  if (node.children.length == 0 && currentAstNode.contents.name != "Block"){
     currentAstNode = currentAstNode.parent;
-    console.log(node.contents.name + "'s parent has " + node.parent.children.length + " children");
   }
   for (var i = 0; i < node.children.length; i++){
     buildAST(node.children[i]);
