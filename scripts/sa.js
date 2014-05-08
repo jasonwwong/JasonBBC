@@ -209,47 +209,27 @@ function setUsed(node, idname){
 }
 
 function buildAST(node){
-  if (node.contents.name == "Block" || node.contents.name == "WhileStatement" || node.contents.name == "IfStatement"){
-    insertNewAstNode(node.contents.name);
-  }
-  else if (node.contents.name == "PrintStatement"){
-    insertNewAstNode("Print");
-    insertNewAstNode(getNameOfLeaf(node));
-    currentAstNode = currentAstNode.parent.parent;
-    return;
-  }
-  else if (node.contents.name.substr(-9) == "Statement" && node.contents.name.length > 9){
-    insertNewAstNode(node.contents.name);
-    insertNewAstNode(getNameOfLeaf(node.children[0]));
-    currentAstNode = currentAstNode.parent;
-    insertNewAstNode(getNameOfLeaf(node.children[1]));
-    currentAstNode = currentAstNode.parent.parent;
-    return;
-  }
-  else if (node.contents.name == "VarDecl"){
-    insertNewAstNode("VarDecl");
-    insertNewAstNode(getNameOfLeaf(node.children[0]));
-    currentAstNode = currentAstNode.parent;
-    insertNewAstNode(getNameOfLeaf(node.children[1]));
-    currentAstNode = currentAstNode.parent.parent;
-    return;
-  }
-  else if (node.contents.name == "BooleanExpr"){
-    if (node.children[1] != null){
-      insertNewAstNode(node.children[1].contents.token.value);
-      insertNewAstNode(getNameOfLeaf(node.children[0]));
-      currentAstNode = currentAstNode.parent;
-      insertNewAstNode(getNameOfLeaf(node.children[2]));
-      currentAstNode = currentAstNode.parent.parent;
+  var climb = false;
+  if (node.contents.name.indexOf("Statement") > 0 || // a _____statement
+     (node.children.length != 1 && node.contents.name.indexOf("Statement") == -1) || // a leaf or a node with multiple children; non-statement
+      node.contents.name == "Block"){ // a block
+    if (node.children.length == 0){
+      insertNewAstNode(getNameOfLeaf(node));
     }
     else{
-      insertNewAstNode(node.children[0].contents.token.value);
-      currentAstNode = currentAstNode.parent.parent;
+      insertNewAstNode(node.contents.name);
     }
-    return;
+    climb = true;
+  }
+  if (node.children.length == 0){
+    currentAstNode = currentAstNode.parent;
+    console.log(node.contents.name + "'s parent has " + node.parent.children.length + " children");
   }
   for (var i = 0; i < node.children.length; i++){
     buildAST(node.children[i]);
+  }
+  if ((node.children.length > 1 || node.contents.name == "Block") && climb == true){
+    currentAstNode = currentAstNode.parent;
   }
 }
 
@@ -286,13 +266,13 @@ function insertNewAstNode(contents){
 }
 
 function getNameOfLeaf(node){
-  if (node.children.length == 0){
-    if (node.contents.name == "CharList"){
-      return '"{0}"'.format(node.contents.token.value);
-    }
-    else{
-      return node.contents.token.value;
-    }
+  if (node.contents.name == "CharList"){
+    return '"{0}"'.format(node.contents.token.value);
   }
-  else return getNameOfLeaf(node.children[0]);
+  else if (node.contents.name == "Intop"){
+    return "+";
+  }
+  else{
+    return node.contents.token.value;
+  }
 }
