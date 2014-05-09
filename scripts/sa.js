@@ -45,6 +45,37 @@ function analyzeNode(node){
     currentEnvNode = currentEnvNode.parent;
   }
   
+  // typecheck intexprs
+  else if (node.contents.name == "IntExpr"){
+    if (node.children.length == 3){
+      console.log("checking " + node.children[2].children[0].contents.name);
+      if (node.children[2].children[0].contents.name == "Id"){
+        var idname = node.children[2].children[0].contents.token.value;
+        var lineNumber = node.children[2].children[0].contents.token.lineNumber;
+        var linePosition = node.children[2].children[0].contents.token.linePosition;
+        var idtype = getType(currentEnvNode, idname);
+        if (idtype != "int"){
+          output("Error: type mismatch on line {0} character {1}, expected {2} to be int, was {3}".format(lineNumber, linePosition, idname, idtype));
+          return false;
+        }
+        else{
+          output("Type check passed: int == int");
+          console.log(node.children[2].children[0].contents.name);
+        }
+      }
+      else if (node.children[2].children[0].contents.name != "IntExpr"){
+        var lineNumber = node.children[0].contents.token.lineNumber;
+        var linePosition = node.children[0].contents.token.linePosition;
+        output("Error: type mismatch on line {0} character {1}, expected an IntExpr, got a {2}".format(lineNumber, linePosition, node.children[2].children[0].contents.name));
+        return false;
+      }
+      else{
+        output("Type check passed: int == int");
+        console.log(node.children[2].children[0].contents.name);
+      }
+    }
+  }
+  
   // handle identifiers
   else if (node.contents.name == "Id"){
     var statement = node.parent.contents.name;
