@@ -1,6 +1,7 @@
 var currentEnvNode;
 var currentAstNode;
 var astIndentationLevel;
+var symbolTableErrors;
 
 function analyze(){
   ENVIRONMENT = new Node();
@@ -10,8 +11,12 @@ function analyze(){
   var analyzeSuccessful = analyzeNode(CST);
   if (analyzeSuccessful){
     output("Passed scope and type check!<br /><br />Symbol table:");
+    symbolTableErrors = "";
     printSymbolTable(ENVIRONMENT);
-    output("<br />AST:");
+    if (symbolTableErrors != ""){
+      output(symbolTableErrors);
+    }
+    output("AST:");
     AST = new Node();
     AST.contents = "AST";
     currentAstNode = AST;
@@ -48,19 +53,20 @@ function analyzeNode(node){
   // typecheck intexprs
   else if (node.contents.name == "IntExpr"){
     if (node.children.length == 3){
-      console.log("checking " + node.children[2].children[0].contents.name);
       if (node.children[2].children[0].contents.name == "Id"){
         var idname = node.children[2].children[0].contents.token.value;
         var lineNumber = node.children[2].children[0].contents.token.lineNumber;
         var linePosition = node.children[2].children[0].contents.token.linePosition;
         var idtype = getType(currentEnvNode, idname);
+        if (!isInitialized(currentEnvNode, idname)){
+          output("Warning: uninitialized variable '{0}' used on line {1} character {2}".format(idname, lineNumber, linePosition));
+        }
         if (idtype != "int"){
           output("Error: type mismatch on line {0} character {1}, expected {2} to be int, was {3}".format(lineNumber, linePosition, idname, idtype));
           return false;
         }
         else{
           output("Type check passed: int == int");
-          console.log(node.children[2].children[0].contents.name);
         }
       }
       else if (node.children[2].children[0].contents.name != "IntExpr"){
@@ -71,7 +77,6 @@ function analyzeNode(node){
       }
       else{
         output("Type check passed: int == int");
-        console.log(node.children[2].children[0].contents.name);
       }
     }
   }
@@ -89,8 +94,8 @@ function analyzeNode(node){
       idtype = node.parent.children[0].contents.token.value;
     }
     else if (!inScope(currentEnvNode, idname)){
-      output("Warning: uninitialized variable '{0}' used on line {1} character {2}".format(idname, lineNumber, linePosition));
-      idtype = "?";
+      output("Error: undeclared variable '{0}' used on line {1} character {2}".format(idname, lineNumber, linePosition));
+      return;
     }
     else{
       idtype = getType(currentEnvNode, idname);
@@ -136,7 +141,7 @@ function analyzeNode(node){
           // trim off the "Expr" from token name, e.g. "StringExpr"
           expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
         }
-        if (idtype != expectedType && (idtype != "?" && expectedType != "?")){
+        if (idtype != expectedType){
           output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
           return false;
         }
@@ -152,17 +157,21 @@ function analyzeNode(node){
       var expectedType = tokenBeingComparedTo.contents.name;
       if (expectedType == "Id"){
         expectedType = getType(currentEnvNode, tokenBeingComparedTo.contents.token.value);
+        if (!isInitialized(currentEnvNode, tokenBeingComparedTo.contents.token.value)){
+          output("Warning: uninitialized variable '{0}' used on line {1} character {2}".format(tokenBeingComparedTo.contents.token.value, lineNumber, linePosition));
+        }
       }
       else{
         // trim off the "Expr" from token name, e.g. "StringExpr"
         expectedType = expectedType.substr(0, expectedType.length - 4).toLowerCase();
       }
-      if (idtype != expectedType && (idtype != "?" && expectedType != "?")){
+      if (idtype != expectedType){
         output("Error: type mismatch on line {0} character {1}, expected {2} to be {3}, was {4}".format(lineNumber, linePosition, idname, expectedType, idtype));
         return false;
       }
       else{
         output("Type check passed: {0} == {1}".format(idtype, expectedType));
+        setInitialized(currentEnvNode, idname);
       }
     }
   }
@@ -184,6 +193,7 @@ function printSymbolTable(node){
         var used = "";
         if (token.used == false){
           used = "un";
+          symbolTableErrors += "Warning: unused variable {0} on line {1} character {2}<br />".format(token.name, token.lineNumber, token.linePosition);
         }
         output("{0}: {1}, line {2}, character {3}, scope {4}, {5}used".format(token.name, token.type, token.lineNumber, token.linePosition, getScope(node), used));
       }
@@ -229,6 +239,23 @@ function getType(node, idname){
   }
 }
 
+function isInitialized(node, idname){
+  if (node.contents[idname] != null){
+    if (node.contents[idname].initialized == true){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  else if (node.parent != null){
+    return isInitialized(node.parent, idname);
+  }
+  else{
+    return false;
+  }
+}
+
 function setUsed(node, idname){
   if (node.contents[idname] != null){
     node.contents[idname].used = true;
@@ -236,6 +263,16 @@ function setUsed(node, idname){
   }
   else if (node.parent != null){
     setUsed(node.parent, idname);
+  }
+}
+
+function setInitialized(node, idname){
+  if (node.contents[idname] != null){
+    node.contents[idname].initialized = true;
+    output("Variable initialized: {0}, declared in scope {1}".format(idname, node.contents["scopeLevel"]));
+  }
+  else if (node.parent != null){
+    setInitialized(node.parent, idname);
   }
 }
 

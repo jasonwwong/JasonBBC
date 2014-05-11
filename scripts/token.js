@@ -4,4 +4,5 @@ function Token(){
   this.linePosition = null;
   this.value = null;
   this.used = false;
+  this.initialized = false;
 }
