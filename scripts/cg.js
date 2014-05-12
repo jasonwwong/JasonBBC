@@ -45,7 +45,12 @@ function traverseAndGen(node){
   // recurse on the children if not a statement
   if (node.contents.name.indexOf("Statement") == -1){
     for (var i = 0; i < node.children.length; i++){
-      traverseAndGen(node.children[i]);
+      if (!stackOverflow){
+        traverseAndGen(node.children[i]);
+      }
+      else{
+        return false;
+      }
     }
   }
   
@@ -151,8 +156,9 @@ function genPrintStatement(node){
   // id
   else if (output.indexOf("Expr") == -1){
     switch(lookUpType(output, getScope(currentEnvNode))){
-      case "int":
+      // NYI
       case "boolean":
+      case "int":
         // load y reg from memory
         insertCode("AC " + lookUpTempCode(output, getScope(currentEnvNode)));
         // syscall
@@ -197,7 +203,7 @@ function genAssignmentStatement(node){
       value = "0";
     }
     else if (value == "true"){
-      value == "1";
+      value = "1";
     }
     // not a string
     if (value.substr(0,1) != '"'){
@@ -230,8 +236,9 @@ function genAssignmentStatement(node){
   }
 }
 
+// NYI
 function genWhileStatement(node){
-  
+  insertCode("EA");
 }
 
 function genIfStatement(node){
@@ -258,7 +265,7 @@ function genIfStatement(node){
     traverseAndGen(node.children[1]);
     
     // for backpatching
-    jumps["J" + myJumpNum] = stackPointer - oldStackPointer;
+    jumps["J" + myJumpNum] = stackPointer - oldStackPointer - 1;
   }
 }
 
@@ -295,7 +302,7 @@ function genIntExpr(node){
     // id
     else{
       // load acc from memory
-      insertCode("AD " + toByte(digit2));
+      insertCode("AD " + lookUpTempCode(digit2, getScope(currentEnvNode)));
     }
     
     // add memory to acc
@@ -320,6 +327,12 @@ function genBooleanExpr(node){
   // number
   if ("1234567890".indexOf(left) != -1){
     insertCode("A2 " + toByte(left));
+  }
+  else if (left == "true"){
+    insertCode("A2 01");
+  }
+  else if (left == "false"){
+    insertCode("A2 00");
   }
   // string
   else if (left.substr(0,1) == '"'){
@@ -353,6 +366,12 @@ function genBooleanExpr(node){
   if ("1234567890".indexOf(right) != -1){
     insertCode("A9 " + toByte(right));
   }
+  else if (right == "true"){
+    insertCode("A9 01");
+  }
+  else if (right == "false"){
+    insertCode("A9 00");
+  }
   // string
   else if (right.substr(0,1) == '"'){
     insertCode("AD " + lookUpTempCode(right, getScope(currentEnvNode)));
@@ -371,7 +390,7 @@ function genBooleanExpr(node){
   }
   // expr
   else{
-    node = node.children[0];
+    node = node.children[2];
     // call the expression, which sets the acc to the result
     window["gen" + node.contents.name](node);
   }
