@@ -170,8 +170,34 @@ function genPrintStatement(node){
   // id
   else if (output.indexOf("Expr") == -1){
     switch(lookUpType(output, getScope(currentEnvNode))){
-      // NYI
       case "boolean":
+        // load a 1 into x register for testing against
+        insertCode("A2 01");
+        // test the variable
+        insertCode("EC " + lookUpTempCode(output, getScope(currentEnvNode)));
+        // jumps over true part if var = 0
+        insertCode("D0 0C");
+        
+        // -------------------- true part --------------------
+        putStringInHeap("true");
+        // load acc into y reg
+        insertCode("A0 " + toByte(heapPointer + 1));
+        // syscall
+        insertCode("A2 02 FF");
+        // load a 0 into x register to jump over false part
+        insertCode("A2 00");
+        // test the variable
+        insertCode("EC " + lookUpTempCode(output, getScope(currentEnvNode)));
+        // jump over false part if var = 1
+        insertCode("D0 05");
+        
+        // -------------------- false part --------------------
+        putStringInHeap("false");
+        // load acc into y reg
+        insertCode("A0 " + toByte(heapPointer + 1));
+        // syscall
+        insertCode("A2 02 FF");
+        break;
       case "int":
         // load y reg from memory
         insertCode("AC " + lookUpTempCode(output, getScope(currentEnvNode)));

@@ -114,6 +114,18 @@ Expected: Successful compilation
 Actual:   Successful compilation
 Output:   truefalse
 
+Input:
+{
+  boolean a
+  a = true
+  print(a)
+  a = false
+  print(a)
+}$
+Expected: Successful compilation
+Actual:   Successful compilation
+Output:   truefalse
+
 Input:    {}
 Expected: Successful compilation
 Actual:   Successful compilation, Warning: EOF not found, inserting...
