@@ -12,7 +12,7 @@ function init(){
   editor.getSession().setUseSoftTabs(true);
   $("#compile").on("click", function(){
     INPUT = editor.getValue() + " ";
-    var steps = ["lex", "parse", "analyze"];
+    var steps = ["lex", "parse", "analyze", "codegen"];
     clearOutput();
     TOKENS = [];
     SYMBOLS = [];

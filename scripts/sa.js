@@ -16,7 +16,7 @@ function analyze(){
     if (symbolTableErrors != ""){
       output(symbolTableErrors);
     }
-    output("AST:");
+    output("<br />AST:");
     AST = new Node();
     AST.contents = "AST";
     currentAstNode = AST;
