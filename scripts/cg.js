@@ -217,10 +217,38 @@ function genPrintStatement(node){
     node = node.children[0];
     // call the expression, which sets the acc to the result
     window["gen" + node.contents.name](node);
-    // load acc into y reg
-    insertCode("AC T1 XX");
-    // syscall
-    insertCode("A2 01 FF");
+    if (node.contents.name == "BooleanExpr"){
+      // jumps over true part if var = 0
+      insertCode("D0 11");
+      
+      // -------------------- true part --------------------
+      putStringInHeap("true");
+      // load acc into y reg
+      insertCode("A0 " + toByte(heapPointer + 1));
+      // syscall
+      insertCode("A2 02 FF");
+      // load a 0 into x register to jump over false part
+      insertCode("A2 00");
+      // load a 1 into temp register to jump over false part
+      insertCode("A9 01 8D T1 XX");
+      // test the variable
+      insertCode("EC T1 XX");
+      // jump over false part if var = 1
+      insertCode("D0 05");
+      
+      // -------------------- false part --------------------
+      putStringInHeap("false");
+      // load acc into y reg
+      insertCode("A0 " + toByte(heapPointer + 1));
+      // syscall
+      insertCode("A2 02 FF");
+    }
+    else{
+      // load acc into y reg
+      insertCode("AC T1 XX");
+      // syscall
+      insertCode("A2 01 FF");
+    }
   }
 }
 
