@@ -145,6 +145,20 @@ function genPrintStatement(node){
     insertCode("A0 " + toByte(output));
     insertCode("A2 01 FF");
   }
+  else if (output == "true"){
+    putStringInHeap("true");
+    // load acc into y reg
+    insertCode("A0 " + toByte(heapPointer + 1));
+    // syscall
+    insertCode("A2 02 FF");
+  }
+  else if (output == "false"){
+    putStringInHeap("false");
+    // load acc into y reg
+    insertCode("A0 " + toByte(heapPointer + 1));
+    // syscall
+    insertCode("A2 02 FF");
+  }
   // string
   else if (output.substr(0,1) == '"'){
     putStringInHeap(output.substr(1, output.length - 2));

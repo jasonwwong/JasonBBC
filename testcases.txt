@@ -74,6 +74,7 @@ Expected: Successful compilation
 Actual:   Successful compilation
 Output:   true
 
+Input:
 {
   boolean a
   a = true
@@ -90,6 +91,7 @@ Expected: Successful compilation
 Actual:   Successful compilation
 Output:   true
 
+Input:
 {
   string a
   a = "asdf"
@@ -102,6 +104,15 @@ Output:   true
 Expected: Successful compilation
 Actual:   Successful compilation
 Output:   true
+
+Input:
+{
+  print(true)
+  print(false)
+}
+Expected: Successful compilation
+Actual:   Successful compilation
+Output:   truefalse
 
 Input:    {}
 Expected: Successful compilation
