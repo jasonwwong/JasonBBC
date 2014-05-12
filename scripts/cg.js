@@ -7,7 +7,7 @@ var stackOverflow;
 
 function codegen(){
   executable = [];
-  statics = [{temp: "T0 XX", varname: "temp", scope: 0, address: 0}];
+  statics = [{temp: "T1 XX", varname: "temp", scope: 0, vartype: "int", address: 0}];
   jumps = [];
   stackPointer = 0;
   heapPointer = 255;
@@ -17,6 +17,7 @@ function codegen(){
   if (!result){
     return false;
   }
+  backpatch();
   fillRestWithZeroes();
   output("<br />" + getExecutable());
   return true;
@@ -24,7 +25,7 @@ function codegen(){
 
 function traverseAndGen(node){
   // call the appropriate generation function on non-leaves
-  if (node.children.length > 1){
+  if (node.children.length > 0){
     output("Generating code for " + node.contents.name);
     window["gen" + node.contents.name](node);
     if (stackOverflow){
@@ -52,6 +53,8 @@ function traverseAndGen(node){
     // don't need info from old node anymore, get rid of it
     currentEnvNode.children.splice(0, 1);
   }
+  
+  return true;
 }
 
 function insertCode(code){
@@ -86,7 +89,7 @@ function genVarDecl(node){
   var type = node.children[0].contents.name;
   var n = statics.length + 1;
   var name = node.children[1].contents.name;
-  statics.push({temp: "T{0} XX".format(n), varname: name, scope: getScope(currentEnvNode), address: 0});
+  statics.push({temp: "T{0} XX".format(n), varname: name, scope: getScope(currentEnvNode), vartype: type, address: 0});
   if (type == "int" || type == "boolean"){
     insertCode("A9 00 8D T{0} XX".format(n));
   }
@@ -96,6 +99,14 @@ function lookUpTempCode(varname, scope){
   for (var i = 0; i < statics.length; i++){
     if (statics[i].varname == varname && scope.indexOf(statics[i].scope) == 0){
       return statics[i].temp;
+    }
+  }
+}
+
+function lookUpType(varname, scope){
+  for (var i = 0; i < statics.length; i++){
+    if (statics[i].varname == varname && scope.indexOf(statics[i].scope) == 0){
+      return statics[i].vartype;
     }
   }
 }
@@ -112,7 +123,48 @@ function toByte(s){
 }
 
 function genPrintStatement(node){
-  
+  var output = node.children[0].contents.name;
+  // number
+  if ("1234567890".indexOf(output) != -1){
+    insertCode("A0 " + toByte(output));
+    insertCode("A2 01 FF");
+  }
+  // string
+  else if (output.substr(0,1) == '"'){
+    putStringInHeap(output.substr(1, output.length - 2));
+    // load acc into y reg
+    insertCode("A0 " + toByte(heapPointer + 1));
+    // syscall
+    insertCode("A2 02 FF");
+  }
+  // id
+  else if (output.indexOf("Expr") == -1){
+    switch(lookUpType(output, getScope(currentEnvNode))){
+      case "int":
+      case "boolean":
+        // load y reg from memory
+        insertCode("AC " + lookUpTempCode(output, getScope(currentEnvNode)));
+        // syscall
+        insertCode("A2 01 FF");
+        break;
+      case "string":
+        // load y reg from memory
+        insertCode("AC " + lookUpTempCode(output, getScope(currentEnvNode)));
+        // syscall
+        insertCode("A2 02 FF");
+        break;
+    }
+  }
+  // expr
+  else{
+    node = node.children[0];
+    // call the expression, which sets the acc to the result
+    window["gen" + node.contents.name](node);
+    // load acc into y reg
+    insertCode("AC T1 XX");
+    // syscall
+    insertCode("A2 01 FF");
+  }
 }
 
 function putStringInHeap(s){
@@ -154,7 +206,7 @@ function genAssignmentStatement(node){
     else{
       putStringInHeap(value.substr(1, value.length - 2));
       // load acc from constant then store into memory
-      insertCode("A9 {0} 8D {1}".format(toByte(heapPointer), lookUpTempCode(name, getScope(currentEnvNode))));
+      insertCode("A9 {0} 8D {1}".format(toByte(heapPointer + 1), lookUpTempCode(name, getScope(currentEnvNode))));
     }
   }
   // right side is expression, call it
@@ -188,23 +240,33 @@ function genIntExpr(node){
   // nested int expr
   else{
     // store the acc in memory
-    insertCode("8D T0 XX");
+    insertCode("8D T1 XX");
     // load the new digit into the acc
     insertCode("A9 " + toByte(digit));
     // add the old acc to the acc
-    insertCode("6D T0 XX");
+    insertCode("6D T1 XX");
   }
   
   // right side is a number or id
   if ("1234567890".indexOf(digit2) != -1 || digit2.indexOf("Expr") == -1){
-    insertCode("8D T0 XX");
+    // save acc to memory
+    insertCode("8D T1 XX");
+    
+    // number
     if ("1234567890".indexOf(digit2) != -1){
+      // load acc from const
       insertCode("A9 " + toByte(digit2));
     }
+    // id
     else{
-      insertCode("AD T0 XX");
+      // load acc from memory
+      insertCode("AD " + toByte(digit2));
     }
-    insertCode("6D T0 XX");
+    
+    // add memory to acc
+    insertCode("6D T1 XX");
+    // store acc in memory
+    insertCode("8D T1 XX");
   }
   // right side is another intexpr, call it
   else{
@@ -218,4 +280,26 @@ function genBooleanExpr(node){
 
 function genBlock(node){
   
+}
+
+function backpatch(){
+  output("Backpatching...");
+  insertCode("00");
+  for (var i = 1; i <= statics.length; i++){
+    var hex = parseInt(stackPointer).toString(16).toUpperCase();
+    while (hex.length < 4){
+      hex = "0" + hex;
+    }
+    output("T{0} XX -> {1}".format(i, hex));
+    for (var j = 0; j < executable.length; j++){
+      if (executable[j] == "T" + i){
+        var firstByte = hex.substr(2, 2);
+        var secondByte = hex.substr(0, 2);
+        executable[j] = firstByte;
+        executable[j+1] = secondByte;
+        
+      }
+    }
+    insertCode("00");
+  }
 }
