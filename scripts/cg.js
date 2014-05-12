@@ -3,6 +3,7 @@ var stackPointer;
 var heapPointer;
 var statics;
 var jumps;
+var stackOverflow;
 
 function codegen(){
   executable = [];
@@ -10,18 +11,26 @@ function codegen(){
   jumps = [];
   stackPointer = 0;
   heapPointer = 255;
+  stackOverflow = false;
   currentEnvNode = ENVIRONMENT;
-  traverseAndGen(AST.children[0]);
+  var result = traverseAndGen(AST.children[0]);
+  if (!result){
+    return false;
+  }
   fillRestWithZeroes();
   output("<br />" + getExecutable());
   return true;
 }
 
 function traverseAndGen(node){
-  // call the appropriate generation function
+  // call the appropriate generation function on non-leaves
   if (node.children.length > 1){
     output("Generating code for " + node.contents.name);
     window["gen" + node.contents.name](node);
+    if (stackOverflow){
+      output("Error: stack overflow");
+      return false;
+    }
   }
   
   // block start, move the scope pointer down
@@ -50,6 +59,9 @@ function insertCode(code){
   for (var i = 0; i < codeArray.length; i++){
     executable[stackPointer] = codeArray[i];
     stackPointer++;
+    if (stackPointer >= heapPointer){
+      stackOverflow = true;
+    }
   }
 }
 
