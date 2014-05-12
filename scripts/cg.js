@@ -3,12 +3,14 @@ var stackPointer;
 var heapPointer;
 var statics;
 var jumps;
+var jumpNum;
 var stackOverflow;
 
 function codegen(){
   executable = [];
   statics = [{temp: "T1 XX", varname: "temp", scope: 0, vartype: "int", address: 0}];
-  jumps = [];
+  jumps = {};
+  jumpNum = 0;
   stackPointer = 0;
   heapPointer = 255;
   stackOverflow = false;
@@ -95,8 +97,16 @@ function genVarDecl(node){
   }
 }
 
+// sorting statics by decreasing scope length makes it possible to iterate
+// over it and grab the first partial match to get the correct scope
+function sortStatics(a, b){
+  return b.scope.length - a.scope.length;
+}
+
 function lookUpTempCode(varname, scope){
+  statics.sort(sortStatics);
   for (var i = 0; i < statics.length; i++){
+    //console.log("looking for " + scope + " in " + statics[i].scope);
     if (statics[i].varname == varname && scope.indexOf(statics[i].scope) == 0){
       return statics[i].temp;
     }
@@ -104,6 +114,7 @@ function lookUpTempCode(varname, scope){
 }
 
 function lookUpType(varname, scope){
+  statics.sort(sortStatics);
   for (var i = 0; i < statics.length; i++){
     if (statics[i].varname == varname && scope.indexOf(statics[i].scope) == 0){
       return statics[i].vartype;
@@ -224,7 +235,31 @@ function genWhileStatement(node){
 }
 
 function genIfStatement(node){
-  
+  var condition = node.children[0].contents.name;
+  if (condition == "true"){
+    traverseAndGen(node.children[1]);
+  }
+  else if (condition == "false"){
+    // don't bother generating the code underneath the if statement
+    // since it will never be evaluated
+  }
+  else{
+    // evaluate the boolean expression
+    genBooleanExpr(node.children[0]);
+    
+    // ready the jump
+    var oldStackPointer = stackPointer;
+    jumpNum++;
+    var myJumpNum = jumpNum;
+    jumps["J" + myJumpNum] = "?";
+    insertCode("D0 J" + myJumpNum);
+    
+    // generate code for the associated block
+    traverseAndGen(node.children[1]);
+    
+    // for backpatching
+    jumps["J" + myJumpNum] = stackPointer - oldStackPointer;
+  }
 }
 
 // postcondition: the accumulator has the result of the expression
@@ -274,8 +309,77 @@ function genIntExpr(node){
   }
 }
 
+// postcondition: z register is set
 function genBooleanExpr(node){
+  output("Generating code for BooleanExpr");
+  var left = node.children[0].contents.name;
+  var op = node.children[1].contents.name;
+  var right = node.children[2].contents.name;
   
+  // evaluate the left side and put it in the x register
+  // number
+  if ("1234567890".indexOf(left) != -1){
+    insertCode("A2 " + toByte(left));
+  }
+  // string
+  else if (left.substr(0,1) == '"'){
+    insertCode("AE " + lookUpTempCode(left, getScope(currentEnvNode)));
+  }
+  // id
+  else if (left.indexOf("Expr") == -1){
+    switch(lookUpType(left, getScope(currentEnvNode))){
+      case "int":
+      case "boolean":
+        insertCode("AE " + lookUpTempCode(left, getScope(currentEnvNode)));
+        break;
+      case "string":
+        insertCode("AE " + lookUpTempCode(left, getScope(currentEnvNode)));
+        break;
+    }
+  }
+  // expr
+  else{
+    node = node.children[0];
+    // call the expression, which sets the acc to the result
+    window["gen" + node.contents.name](node);
+    // store the acc in temp
+    insertCode("8D T1 XX");
+    // store temp in x
+    insertCode("AE T1 XX");
+  }
+  
+  // evaluate the right side and put it in the temp register
+  // number
+  if ("1234567890".indexOf(right) != -1){
+    insertCode("A9 " + toByte(right));
+  }
+  // string
+  else if (right.substr(0,1) == '"'){
+    insertCode("AD " + lookUpTempCode(right, getScope(currentEnvNode)));
+  }
+  // id
+  else if (right.indexOf("Expr") == -1){
+    switch(lookUpType(right, getScope(currentEnvNode))){
+      case "int":
+      case "boolean":
+        insertCode("AD " + lookUpTempCode(right, getScope(currentEnvNode)));
+        break;
+      case "string":
+        insertCode("AD " + lookUpTempCode(right, getScope(currentEnvNode)));
+        break;
+    }
+  }
+  // expr
+  else{
+    node = node.children[0];
+    // call the expression, which sets the acc to the result
+    window["gen" + node.contents.name](node);
+  }
+  // store the acc in temp
+  insertCode("8D T1 XX");
+  
+  // do the comparison
+  insertCode("EC T1 XX");
 }
 
 function genBlock(node){
@@ -283,8 +387,12 @@ function genBlock(node){
 }
 
 function backpatch(){
-  output("Backpatching...");
+  output("<br />Backpatching...");
+  
+  // separate statics from code
   insertCode("00");
+  
+  // statics
   for (var i = 1; i <= statics.length; i++){
     var hex = parseInt(stackPointer).toString(16).toUpperCase();
     while (hex.length < 4){
@@ -301,5 +409,19 @@ function backpatch(){
       }
     }
     insertCode("00");
+  }
+  
+  // jumps
+  for (var i = 1; i <= jumpNum; i++){
+    var hex = jumps["J" + i].toString(16).toUpperCase();
+    while (hex.length < 2){
+      hex = "0" + hex;
+    }
+    output("J{0} -> {1}".format(i, hex));
+    for (var j = 0; j < executable.length; j++){
+      if (executable[j] == "J" + i){
+        executable[j] = hex;
+      }
+    }
   }
 }
