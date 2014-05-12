@@ -295,7 +295,7 @@ function buildAST(node){
   for (var i = 0; i < node.children.length; i++){
     buildAST(node.children[i]);
   }
-  if ((node.children.length > 1 || node.contents.name == "Block") && climb == true){
+  if ((node.children.length > 1 || node.contents.name == "Block" || node.contents.name == "PrintStatement") && climb == true){
     currentAstNode = currentAstNode.parent;
   }
 }
